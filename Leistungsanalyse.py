@@ -22,13 +22,19 @@ def plot_leistung_herzfrequenz(activity_data):
     # Layout anpassen
     fig.update_layout(
         title="Leistung und Herzfrequenz über die Zeit",
-        xaxis_title="Zeit",
-        yaxis_title="Leistung",
+        xaxis_title="Zeit (s)",
+        yaxis=dict(
+            title="Leistung (Watt)",
+            side='left'
+        ),
         yaxis2=dict(
-            title="Herzfrequenz",
+            title='Herzfrequenz (bpm)',
+            side='right',
             overlaying='y',
-            side='right'
-        )
+            matches='y',
+            range=[activity_data['HeartRate'].min(), activity_data['HeartRate'].max()]
+        ),
+        legend=dict(orientation="h")
     )
 
     return fig
@@ -70,7 +76,7 @@ zeit_in_zonen = activity_data['Zone'].value_counts()"""
 if __name__ == "__main__":
     plot_leistung_herzfrequenz(activity_data).show()
     print("Zeit in den Zonen:")
-    print(zeit_in_zonen)
+    #print(zeit_in_zonen)
     max_heartrate = 200
     heart_zones(max_heartrate)
     zeit_in_zonen = analyze_heart_zones(activity_data, max_heartrate)
