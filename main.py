@@ -52,11 +52,13 @@ def show_diagram():
 def show_data():
     if st.session_state.get('diagram') == 1:
         # Leistungsanalyse
+        max_heartrate = st.slider('Maximale Herzfrequenz', min_value=100, max_value=220, step=1)
         st.write(f"Mittelwert der Leistung: {la.mittelwert_leistung} Watt")
         st.write(f"Maximalwert der Leistung: {la.maximalwert_leistung} Watt")
-        st.write(f"Maximale Herzfrequenz: {la.max_herzfrequenz} BPM")
-        st.write(f"Zeit in den Zonen: {la.zeit_in_zonen} Sekunden")
-        st.write(f"Zonengrenzen: {la.zonen_grenzen} BPM ")
+        zeit_in_zonen = la.analyze_heart_zones(max_heartrate)
+        st.write(f"Zeit in den Zonen: {zeit_in_zonen} Sekunden")
+        
+        return max_heartrate
    
 
     #elif st.session_state.get('diagram') == 2:
@@ -106,9 +108,15 @@ with st.sidebar:
             
 
 
-col1, col2 = st.columns(2) 
+col1, col2 = st.columns([1,2]) 
 # Eine Überschrift der ersten Ebene
-st.markdown('<p class="custom-position2 custom-font">EKG-Daten</p>', unsafe_allow_html=True)
+if st.session_state.get('diagram') == 1:
+    st.markdown('<p class="custom-position2 custom-font">Leistungsdaten</p>', unsafe_allow_html=True)
+elif st.session_state.get('diagram') == 2:
+    st.markdown('<p class="custom-position2 custom-font">EKG-Daten</p>', unsafe_allow_html=True)
+elif st.session_state.get('diagram') == None:
+    st.markdown('<p class="custom-position2 custom-font">HerzAktiv <3</p>', unsafe_allow_html=True)
+
 with col1:
     # Anlegen des Session State. Bild, wenn es kein Bild gibt
     if 'picture_path' not in st.session_state:
