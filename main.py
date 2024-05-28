@@ -4,6 +4,7 @@ import read_data as rd
 from PIL import Image
 import Leistungsanalyse as la
 import traceback
+import BMI
 
 # Setze das Seitenlayout auf "wide"
 st.set_page_config(layout="wide")
@@ -41,10 +42,16 @@ def callback_function():
 def update_toggles(toggled_key):
     if toggled_key == 'toggle_1' and st.session_state.toggle_1:
         st.session_state.toggle_2 = False
+        st.session_state.toggle_3 = False
         st.session_state.diagram = 1
     elif toggled_key == 'toggle_2' and st.session_state.toggle_2:
         st.session_state.toggle_1 = False
+        st.session_state.toggle_3 = False
         st.session_state.diagram = 2
+    elif toggled_key == 'toggle_3' and st.session_state.toggle_3:
+        st.session_state.toggle_1 = False
+        st.session_state.toggle_2 = False
+        st.session_state.diagram = 3
     else:
         st.session_state.diagram = None
 
@@ -86,11 +93,21 @@ def show_data():
             st.metric(label="Zeit in Zone 4", value=f"{zeit_in_zonen['Z4']} s")
             st.metric(label="Zeit in Zone 5", value=f"{zeit_in_zonen['Z5']} s")
 
+def analyse_bmi():
+    if st.session_state.get('diagram') == 3:
+        weight = st.number_input('Gewicht (kg)', min_value=0.0, max_value=200.0, value=70.0)
+        height = st.number_input('Größe (m)', min_value=0.0, max_value=2.5, value=1.75)
+        bmi, category = BMI.calculate_bmi(weight, height)
+        st.write(f"Ihr BMI beträgt {bmi}. Sie befinden sich in der Kategorie '{category}'.")
+
+
 # Initialisiere die Toggle-Buttons im Session State
 if 'toggle_1' not in st.session_state:
     st.session_state.toggle_1 = False
 if 'toggle_2' not in st.session_state:
     st.session_state.toggle_2 = False
+if 'toggle_3' not in st.session_state:
+    st.session_state.toggle_3 = False
 if 'diagram' not in st.session_state:
     st.session_state.diagram = None
 
@@ -106,6 +123,7 @@ with st.sidebar:
 
     # Toggle-Buttons
     Leistungs_button = st.toggle('Leistungs-Analyse', value=st.session_state.toggle_1, key='toggle_1', on_change=update_toggles, args=('toggle_1',))
+    BMI_button = st.toggle('BMI-Analyse', value=st.session_state.toggle_3, key='toggle_3', on_change=update_toggles, args=('toggle_3',))
     EKG_button = st.toggle('EKG-Analyse', value=st.session_state.toggle_2, key='toggle_2', on_change=update_toggles, args=('toggle_2',))
 
     # Radiobuttons für Versuchsperson-Auswahl bei aktivierter EKG-Analyse
@@ -130,6 +148,10 @@ if st.session_state.get('diagram') == 1:
 elif st.session_state.get('diagram') == 2:
     header_html = '<p class="custom-position2 custom-font">EKG-Daten</p>'
     st.markdown(header_html, unsafe_allow_html=True)
+elif st.session_state.get('diagram') == 3:
+    header_html = '<p class="custom-position2 custom-font">BMI-Analyse</p>'
+    st.markdown(header_html, unsafe_allow_html=True)
+    analyse_bmi()
 elif st.session_state.get('diagram') is None:
     header_html = '<p class="custom-position2 custom-font">HerzAktiv <3</p>'
     st.markdown(header_html, unsafe_allow_html=True)
