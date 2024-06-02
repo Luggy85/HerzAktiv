@@ -3,8 +3,10 @@ import pandas as pd
 import read_data as rd
 from PIL import Image
 import Leistungsanalyse as la
+import Powercurve as pc
 import traceback
 import BMI
+import ekg_daten as EKGAnalyzer
 
 # Setze das Seitenlayout auf "wide"
 st.set_page_config(layout="wide")
@@ -36,7 +38,7 @@ st.markdown("""
 
 # Callback-Funktion für Radiobutton-Auswahl
 def callback_function():
-    print(f"The user has changed to {st.session_state.current_user}")
+    print(f"The user has changed to {st.session_state.current_user_name}")
 
 # Toggle-Buttons aktualisieren
 def update_toggles(toggled_key):
@@ -57,20 +59,42 @@ def update_toggles(toggled_key):
 
 # Diagramm anzeigen
 def show_diagram():
+    #Leistungsanalyse und Powercurve
     if 'max_heartrate' not in st.session_state:
         st.session_state['max_heartrate'] = 200
 
     max_heartrate = st.session_state['max_heartrate']
 
     if st.session_state.get('diagram') == 1:
-        if max_heartrate is not None:
-            st.plotly_chart(la.plot_leistung_herzfrequenz(la.activity_data, max_heartrate))
+        tab1, tab2 = st.tabs(['Leistungszonen', 'Power Curve'])
+        with tab1:
+            if max_heartrate is not None:
+                st.plotly_chart(la.plot_leistung_herzfrequenz(la.activity_data, max_heartrate))
+        with tab2:
+            st.plotly_chart(pc.plot_powercurve())
+
+
+    # EKG-Analyse
     elif st.session_state.get('diagram') == 2:
-        st.write('Kein Diagramm ausgewählt')
+        person_data = EKGAnalyzer.load_person_data('data/01_Ruhe.txt')
+        fig, mean_hr, max_hr, selected_person = EKGAnalyzer.analyze_and_plot_ekg(st.session_state.current_user_name, person_data)
+        
+        # Anzeige der EKG-Daten und Herzfrequenz
+        st.markdown('<p class="custom-font">EKG-Daten</p>', unsafe_allow_html=True)
+        st.plotly_chart(fig)
+        st.write(f"**Mittlere Herzfrequenz:** {mean_hr:.2f} BPM")
+        st.write(f"**Maximale Herzfrequenz:** {max_hr:.2f} BPM")
+        
+        # Bild und Datenanzeige der ausgewählten Person
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            image = Image.open(selected_person['picture_path'])
+            st.image(image, caption=f"{st.session_state.current_user_name} ({2024 - selected_person['date_of_birth']} Jahre)")
 
 # Daten anzeigen
 def show_data():
     if st.session_state.get('diagram') == 1:
+
         max_heartrate = st.slider('Maximale Herzfrequenz', min_value=100, max_value=220, step=1, value=st.session_state.get('max_heartrate', 200))
         st.session_state['max_heartrate'] = max_heartrate
 
@@ -99,6 +123,7 @@ def analyse_bmi():
         height = st.number_input('Größe (m)', min_value=0.0, max_value=2.5, value=1.75)
         bmi, category = BMI.calculate_bmi(weight, height)
         st.write(f"Ihr BMI beträgt {bmi}. Sie befinden sich in der Kategorie '{category}'.")
+        st.plotly_chart(BMI.create_bmi_chart(bmi))
 
 
 # Initialisiere die Toggle-Buttons im Session State
@@ -128,16 +153,17 @@ with st.sidebar:
 
     # Radiobuttons für Versuchsperson-Auswahl bei aktivierter EKG-Analyse
     if st.session_state.toggle_2:
-        if 'current_user' not in st.session_state:
-            st.session_state.current_user = 'None'
+        if 'current_user_name' not in st.session_state:
+            st.session_state.current_user_name = 'None'
 
-        person_dict = rd.load_person_data()
-        person_names = rd.get_person_list(person_dict)
+        person_dict = rd.Person.load_person_data()
+        person_names = rd.Person.get_person_list(person_dict)
 
-        st.session_state.current_user = st.radio(
+        st.session_state.current_user_name = st.radio(
             'Versuchsperson',
             options=person_names, key="sbVersuchsperson", on_change=callback_function
         )
+        st.session_state.current_user = rd.Person(rd.Person.find_person_data_by_name(st.session_state.current_user_name))
 
 # Überschrift und Datenanzeige basierend auf der Auswahl
 header_html = ""
@@ -167,10 +193,10 @@ if st.session_state.get('diagram') == 2:
         if 'picture_path' not in st.session_state:
             st.session_state.picture_path = 'data/pictures/none.jpg'
 
-        if st.session_state.current_user in person_names:
-            st.session_state.picture_path = rd.find_person_data_by_name(st.session_state.current_user)['picture_path']
+        if st.session_state.current_user_name in person_names:
+            st.session_state.picture_path = rd.Person.find_person_data_by_name(st.session_state.current_user_name)['picture_path']
         image = Image.open("/Users/lukas/Documents/MCI/Software_engineering/HerzAktiv/" + st.session_state.picture_path)
-        st.image(image, caption=f"{st.session_state.current_user} ({rd.find_age(st.session_state.current_user)})")
+        st.image(image, caption=f"{st.session_state.current_user_name} ({st.session_state.current_user.find_age()})")
     with col2:
         st.write('Keine Daten vorhanden')
 
