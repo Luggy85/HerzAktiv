@@ -6,7 +6,7 @@ import Leistungsanalyse as la
 import Powercurve as pc
 import traceback
 import BMI
-import ekg_daten as EKGAnalyzer
+from ekg_daten import EKGAnalyzer
 
 # Setze das Seitenlayout auf "wide"
 st.set_page_config(layout="wide")
@@ -73,23 +73,31 @@ def show_diagram():
         with tab2:
             st.plotly_chart(pc.plot_powercurve())
 
-
-    # EKG-Analyse
     elif st.session_state.get('diagram') == 2:
-        person_data = EKGAnalyzer.load_person_data('data/01_Ruhe.txt')
-        fig, mean_hr, max_hr, selected_person = EKGAnalyzer.analyze_and_plot_ekg(st.session_state.current_user_name, person_data)
-        
-        # Anzeige der EKG-Daten und Herzfrequenz
-        st.markdown('<p class="custom-font">EKG-Daten</p>', unsafe_allow_html=True)
-        st.plotly_chart(fig)
-        st.write(f"**Mittlere Herzfrequenz:** {mean_hr:.2f} BPM")
-        st.write(f"**Maximale Herzfrequenz:** {max_hr:.2f} BPM")
-        
-        # Bild und Datenanzeige der ausgewählten Person
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            image = Image.open(selected_person['picture_path'])
-            st.image(image, caption=f"{st.session_state.current_user_name} ({2024 - selected_person['date_of_birth']} Jahre)")
+        ekg_type = st.selectbox('EKG-Typ', ['Ruhe-EKG', 'Belastungs-EKG', 'Langzeit-EKG'])
+        person_data = EKGAnalyzer.load_person_data('data/person_db.json')
+
+        # Dynamically determine the path to the EKG file
+        ekg_file_path = None
+        if st.session_state.current_user_name is not None and ekg_type is not None:
+            selected_person = rd.Person.find_person_data_by_name(st.session_state.current_user_name)
+            if 'ekg_tests' in selected_person:
+                for test in selected_person['ekg_tests']:
+                    if test['type'] == ekg_type:
+                        ekg_file_path = test['result_link']
+                        break
+
+        if ekg_file_path is not None:
+            # Pass the file path to the subprogram
+            print(ekg_file_path)
+            ekg_file_path_absolute = f"{ekg_file_path}"
+            analyzer = EKGAnalyzer()
+            fig, mean_hr, max_hr, selected_person = analyzer.analyze_and_plot_ekg(st.session_state.current_user_name, ekg_file_path_absolute)
+            st.plotly_chart(fig)
+            st.write(f"*Mittlere Herzfrequenz:* {mean_hr:.2f} BPM")
+            st.write(f"*Maximale Herzfrequenz:* {max_hr:.2f} BPM")
+        else:
+            st.write('Keine EKG-Daten für die ausgewählte Person und den EKG-Typ gefunden.')
 
 # Daten anzeigen
 def show_data():
