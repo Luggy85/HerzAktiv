@@ -7,7 +7,6 @@ HerzAktiv ist eine Anwendung zur Überwachung und Analyse der Herzaktivität. Si
 
 - Echtzeitüberwachung der Herzfrequenz
 - Historische Datenverfolgung und -analyse
-- Benachrichtigungen bei abnormaler Herzaktivität
 - Benutzerfreundliche Oberfläche
 - Berechnung und Anzeige des Body-Mass-Index (BMI)
 
