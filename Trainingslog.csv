@@ -1,6 +1,0 @@
-ID,Name,Alter,Trainingsart,Datum,Gewicht,Größe,Datei,Durchschnittliche Herzfrequenz,Maximale Herzfrequenz,Minimale Herzfrequenz,Trainingsdauer (Minuten),Kalorienverbrauch,Schritte,Durchschnittliche Intensität
-1,Lukas,21,Krafttraining,2024-06-05,71.0,181.0,Training_0506.json,,,,,,,
-1,Lukas,21,Krafttraining,2024-06-05,71.0,181.0,Training_0506.json,121.1,180.0,80.0,100.25,274.8810000000026,952.2271794962924,5.2
-1,Lukas,18,Krafttraining,2024-06-04,,,Training_0606.json,125.48,180.0,83.0,50.25,274.8810000000026,929.2271794962924,3.8
-1,Lukas,21,Krafttraining,2024-06-05,71.0,181.0,Training_0506.json,125.48,180.0,83.0,50.25,274.8810000000026,929.2271794962924,3.8
-1,Lukas,21,Krafttraining,2024-06-05,71.0,181.0,Training_0506.json,125.48,180.0,83.0,50.25,274.8810000000026,929.2271794962925,3.8
