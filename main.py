@@ -216,7 +216,7 @@ def trainingslog():
             if uploaded_file:
                 st.session_state['file_uploaded'] = True
                 df = uploader.read_csv_file(file_path)
-                if df is not empty:
+                if df is not None:
                     st.session_state['data_saved'] = False
                     uploader.display_form()  # Dies sollte nun das Formular anzeigen
                 else:
