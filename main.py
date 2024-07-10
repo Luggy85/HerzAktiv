@@ -210,16 +210,23 @@ def read_csv_file(file_path):
 def trainingslog():
     if st.session_state.get('diagram') == 4:
         uploader = CSVUploader()
-        json_data, file_name = uploader.upload_file()
-        if json_data is not None and file_name is not None:
-            # Stellen Sie sicher, dass die Datei hochgeladen wurde
-            st.session_state['file_uploaded'] = True
-            st.session_state['data_saved'] = False
-            uploader.display_form()  # Zeigen Sie das Formular nur an, wenn die Datei erfolgreich hochgeladen wurde
+        upload_result = uploader.upload_file()
+        if upload_result is not None:
+            uploaded_file, file_path = upload_result
+            if uploaded_file is not None:
+                # Lese und verarbeite die hochgeladene Datei
+                df = uploader.read_csv_file(file_path)
+                if df is not None and not df.empty:
+                    st.success("Daten erfolgreich geladen und bereit zur weiteren Verarbeitung.")
+                    uploader.display_form()
+                else:
+                    st.warning("Keine verwertbaren Daten in der Datei gefunden.")
+            else:
+                st.warning("Es wurde keine Datei hochgeladen.")
         else:
-            st.error("Fehler beim Hochladen oder Verarbeiten der Datei.")
+            st.error("Fehler beim Hochladen der Datei.")
 
-            
+
 def analyse_training():
     if st.session_state.get('diagram') == 4:
         uploader = CSVUploader()

@@ -6,6 +6,28 @@ import plotly.express as px
 import os
 
 class CSVUploader:
+    
+    def read_csv_file(self, file_path):
+        """Liest eine CSV-Datei sicher ein und erstellt sie bei Bedarf."""
+        if not os.path.exists(file_path):
+            # Erstellt eine leere CSV-Datei mit Spaltenköpfen, wenn sie nicht existiert
+            df = pd.DataFrame(columns=['ID', 'Name', 'Alter', 'Trainingsart', 'Datum', 'Gewicht', 'Größe', 'Datei'])
+            df.to_csv(file_path, index=False)
+            st.info("Eine neue Trainingslog-Datei wurde erstellt.")
+            return df
+        else:
+            try:
+                df = pd.read_csv(file_path)
+                if df.empty:
+                    st.warning("CSV-Datei ist leer.")
+                return df
+            except pd.errors.EmptyDataError:
+                st.error("Die CSV-Datei ist leer und hat keine Spalten zu lesen.")
+                return None
+            except Exception as e:
+                st.error(f"Ein Fehler ist beim Lesen der CSV-Datei aufgetreten: {e}")
+                return None
+            
     def __init__(self):
         self.data_frame = None
         self.json_data = None
