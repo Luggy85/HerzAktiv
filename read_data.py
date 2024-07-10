@@ -1,6 +1,7 @@
 import json
 import time
 
+
 class Person:
 
     @staticmethod

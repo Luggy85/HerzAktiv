@@ -1,105 +1,101 @@
-# EKGAnalyzer.py
-import pandas as pd
 import plotly.graph_objs as go
 from scipy.signal import find_peaks
 import numpy as np
 import json
+import streamlit as st
 
 class EKGAnalyzer:
-    def __init__(self):
-        pass
+    def __init__(self, fs=500, noise_threshold=0.001):  # Annahme: 2 ms zwischen den Messungen entspricht 500 Hz
+        self.fs = fs
+        self.noise_threshold = noise_threshold
 
     @staticmethod
     def load_person_data(file_path):
         try:
             with open(file_path, 'r') as file:
-                return json.load(file)
+                data = json.load(file)
+            return data
         except json.JSONDecodeError as e:
-            print(f"Error reading JSON file: {e}")
+            print(f"JSONDecodeError: {e}")
+            with open(file_path, 'r') as file:
+                content = file.read()
+            print("Inhalt der JSON-Datei:")
+            print(content)
+            raise e
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
             raise e
 
     @staticmethod
     def load_ekg_data(file_path):
-        """
-        Lädt die EKG-Daten aus einer Datei.
+        time = []
+        data = []
+        with open(file_path, 'r') as file:
+            for line in file:
+                try:
+                    values = line.split()
+                    if len(values) == 2:
+                        data.append(float(values[0]))  # Spannung
+                        time.append(float(values[1]))  # Zeit
+                except ValueError as e:
+                    print(f"Zeile konnte nicht konvertiert werden: {line}")
+                    raise e
+        # Debug-Ausgaben um sicherzustellen, dass die Daten korrekt geladen wurden
+        print(f"Geladene Daten: {data[:10]}")
+        print(f"Geladene Zeitstempel: {time[:10]}")
+        return time, data
 
-        :param file_path: Pfad zur EKG-Datendatei
-        :return: Pandas DataFrame mit den EKG-Daten
-        """
-        return pd.read_csv(file_path, delimiter='\t', header=None)
+    def detect_peaks(self, data, height=None, distance=None, threshold=None):
+        if height is None:
+            height = np.mean(data) + self.noise_threshold * np.std(data)
+        if distance is None:
+            distance = self.fs // 2
 
-    @staticmethod
-    def detect_peaks(data, height=None, distance=None):
-        """
-        Identifiziert Peaks in den EKG-Daten.
+        peaks, properties = find_peaks(data, height=height, distance=distance)
+        return peaks, properties
 
-        :param data: EKG-Daten
-        :param height: Mindesthöhe der Peaks
-        :param distance: Mindestabstand zwischen Peaks
-        :return: Indizes der Peaks
-        """
-        peaks, _ = find_peaks(data, height=340, distance=distance)
-        return peaks
-
-    @staticmethod
-    def calculate_heart_rate(peaks, fs=1000):
-        """
-        Berechnet die mittlere und maximale Herzfrequenz basierend auf den Peaks.
-
-        :param peaks: Indizes der Peaks
-        :param fs: Abtastfrequenz (Standard: 1000 Hz)
-        :return: Mittlere Herzfrequenz, maximale Herzfrequenz
-        """
-        peak_times = peaks / fs
+    def calculate_heart_rate(self, time, peaks):
+        # Die Zeitwerte werden angenommen, dass sie bereits in Sekunden sind
+        peak_times = np.array(time)[peaks]
         rr_intervals = np.diff(peak_times)
-        hr = 600 / rr_intervals
+        print(f"Peak Times (in Sekunden): {peak_times}")
+        print(f"RR-Intervalle (in Sekunden): {rr_intervals}")
+        
+        if len(rr_intervals) == 0:
+            return None, None
+
+        hr = 60 / rr_intervals  # Berechnung der Herzrate als Anzahl der Schläge pro Minute
         return np.mean(hr), np.max(hr)
 
     @staticmethod
-    def plot_ekg(data, peaks):
-        """
-        Erstellt ein Plotly-Diagramm der EKG-Daten und markiert die Peaks.
-
-        :param data: EKG-Daten
-        :param peaks: Indizes der Peaks
-        :return: Plotly Figure Objekt
-        """
+    def plot_ekg(time, data, peaks=None):
         fig = go.Figure()
-        fig.add_trace(go.Scatter(y=data, mode='lines', name='EKG Signal'))
-        fig.add_trace(go.Scatter(x=peaks, y=data[peaks], mode='markers', name='Peaks'))
+        fig.add_trace(go.Scatter(x=time, y=data, mode='lines', name='EKG Signal'))
+        if peaks is not None:
+            fig.add_trace(go.Scatter(x=np.array(time)[peaks], y=np.array(data)[peaks], mode='markers', name='Peaks', marker=dict(color='red')))
         return fig
 
-    def analyze_and_plot_ekg(self, current_user_name, file_path):
-        """
-        Analysiert und plottet die EKG-Daten für den aktuellen Benutzer.
+    def analyze_and_plot_ekg(self, person_name, file_path):
+        time, data = self.load_ekg_data(file_path)
+        time = [t / 1000 for t in time]  # Umrechnung in Sekunden
 
-        :param current_user_name: Name des aktuellen Benutzers
-        :param file_path: Pfad zur Datei mit den Personendaten
-        :return: Plotly Figure Objekt, mittlere Herzfrequenz, maximale Herzfrequenz, ausgewählte Person
-        """
-        personen_data = self.load_person_data(file_path)
-        selected_person = next(p for p in personen_data if f"{p['firstname']} {p['lastname']}" == current_user_name)
+        peaks, properties = self.detect_peaks(data)
 
-        ekg_test_dates = [test['date'] for test in selected_person['ekg_tests']]
-        selected_ekg_test_date = ekg_test_dates[0]  # Wählen Sie den ersten EKG-Test
-        selected_ekg_test = next(test for test in selected_person['ekg_tests'] if test['date'] == selected_ekg_test_date)
+        # Slider zur Auswahl des Zeitintervalls
+        time_min, time_max = st.slider("Zeitraum auswählen", min_value=min(time), max_value=max(time), value=(min(time), max(time)))
+        filtered_indices = [i for i, t in enumerate(time) if time_min <= t <= time_max]
+        filtered_time = [time[i] for i in filtered_indices]
+        filtered_data = [data[i] for i in filtered_indices]
 
-        ekg_data = self.load_ekg_data(selected_ekg_test['result_link'])
-        ekg_signal = ekg_data[0]
-        peaks = self.detect_peaks(ekg_signal)
-        mean_hr, max_hr = self.calculate_heart_rate(peaks)
+        # Korrektur der Peak-Indizes für das gefilterte Array
+        filtered_peaks = [i for i, idx in enumerate(filtered_indices) if idx in peaks and i < len(filtered_time)]
 
-        fig = EKGAnalyzer.plot_ekg(ekg_signal, peaks)
+        # Berechnung der Herzfrequenz für die gefilterten Peaks
+        if filtered_peaks:
+            mean_hr, max_hr = self.calculate_heart_rate(filtered_time, filtered_peaks)
+        else:
+            mean_hr, max_hr = None, None
+            st.write("Keine gültigen Peaks im ausgewählten Zeitintervall gefunden.")
 
-        return fig, mean_hr, max_hr, selected_person
-    
-if __name__ == "__main__":
-    file_path = "data/person_db.json"  # Replace with the desired file path
-    current_user_name = "Julian Huber"  # Replace with the desired user name
-
-    analyzer = EKGAnalyzer()
-    fig, mean_hr, max_hr, selected_person = analyzer.analyze_and_plot_ekg(current_user_name, file_path)
-
-    print(f"Mittlere Herzfrequenz: {mean_hr:.2f} bpm")
-    print(f"Maximale Herzfrequenz: {max_hr:.2f} bpm")
-    fig.show()  # Show the plot
+        fig = self.plot_ekg(filtered_time, filtered_data, filtered_peaks)
+        return fig, mean_hr, max_hr
