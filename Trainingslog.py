@@ -6,6 +6,20 @@ import plotly.express as px
 import os
 
 class CSVUploader:
+
+    @staticmethod
+    def process_uploaded_file(uploaded_file):
+        try:
+            data = pd.read_csv(uploaded_file)
+            st.session_state['uploaded_data'] = data
+            st.success("Daten erfolgreich geladen!")
+            CSVUploader.display_data(data)
+        except Exception as e:
+            st.error(f"Fehler beim Lesen der Datei: {e}")
+
+    @staticmethod
+    def display_data(data):
+        st.write(data)
     
     def read_csv_file(self, file_path):
         """Liest eine CSV-Datei sicher ein und erstellt sie bei Bedarf."""

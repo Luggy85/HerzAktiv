@@ -204,6 +204,21 @@ def read_csv_file(file_path):
     except Exception as e:
         st.error(f"Fehler beim Lesen der Datei: {e}")
         return None
+def choose_file_handling():
+    choice = st.radio("Wählen Sie Ihre Option:",
+                      ('Neue Datenbank erstellen', 'Vorhandene Datenbank hochladen'))
+    
+    if choice == 'Neue Datenbank erstellen':
+        st.session_state['using_existing_file'] = False
+    elif choice == 'Vorhandene Datenbank hochladen':
+        st.session_state['using_existing_file'] = True
+        uploaded_file = st.file_uploader("Laden Sie Ihre vorhandene CSV-Datei hoch:", type=['csv'])
+        if uploaded_file is not None:
+            CSVUploader.process_uploaded_file(uploaded_file)
+
+# Im Hauptteil Ihrer App, z.B. nach der Seitenleistenkonfiguration:
+if 'using_existing_file' not in st.session_state:
+    choose_file_handling()
     
 
 def trainingslog():
