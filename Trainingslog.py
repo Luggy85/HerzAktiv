@@ -111,15 +111,15 @@ class CSVUploader:
         st.session_state['new_data'] = new_data
         return new_data
 
-def save_data(self, new_data):
-    if os.path.exists(self.result_file_path):
-        existing_df = pd.read_csv(self.result_file_path)
-        final_df = pd.concat([existing_df, pd.DataFrame([new_data])], ignore_index=True)
-    else:
-        final_df = pd.DataFrame([new_data])
-    
-    final_df.to_csv(self.result_file_path, index=False)
-    print(f"Daten wurden erfolgreich in {self.result_file_path} gespeichert")
+    def save_data(self, new_data):
+        if os.path.exists(self.result_file_path):
+            existing_df = pd.read_csv(self.result_file_path)
+            final_df = pd.concat([existing_df, pd.DataFrame([new_data])], ignore_index=True)
+        else:
+            final_df = pd.DataFrame([new_data])
+        
+        final_df.to_csv(self.result_file_path, index=False)
+        print(f"Daten wurden erfolgreich in {self.result_file_path} gespeichert")
 
     def is_duplicate_id(self, person_id, name):
         result_file_path = "Trainingslog.csv"
