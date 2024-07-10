@@ -208,26 +208,12 @@ def read_csv_file(file_path):
     
 
 def trainingslog():
-    if st.session_state.get('diagram') == 4:
-        uploader = CSVUploader()  # Stelle sicher, dass der Uploader korrekt initialisiert wird
-        json_data, file_name = uploader.upload_file()  # Datei hochladen und JSON-Daten verarbeiten
-        
-        if json_data:
-            st.session_state['file_uploaded'] = True  # Setze den Zustand, dass eine Datei erfolgreich hochgeladen wurde
-            
-            # Zeige das Formular zur Dateneingabe an
-            uploader.display_form()
-            
-            # Wenn Daten gespeichert werden sollen
-            if st.button("Daten speichern"):
-                if not uploader.is_duplicate_id(person_id, person_name):  # Prüfe auf Duplikate
-                    new_data = uploader.add_person_data(person_id, person_name, person_age, training_type, person_weight, person_height)
-                    uploader.save_data(new_data)  # Speichere die neuen Daten
-                    st.success('Daten wurden gespeichert und Analyse kann durchgeführt werden.')
-                else:
-                    st.error("Diese ID wurde bereits mit einem anderen Namen verwendet.")
-        else:
-            st.error("Fehler beim Hochladen der Datei oder ungültige JSON-Datei.")
+    uploader = CSVUploader()
+    json_data, file_name = uploader.upload_file()
+    if json_data:
+        data = uploader.display_form()
+        if data:
+            uploader.save_data(data)
 
 
 def analyse_training():

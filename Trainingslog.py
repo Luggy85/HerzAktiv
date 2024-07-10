@@ -33,13 +33,11 @@ class CSVUploader:
         self.check_or_create_csv()
 
     def check_or_create_csv(self):
+        """Erstellt eine CSV-Datei, wenn sie nicht existiert."""
         if not os.path.exists(self.result_file_path):
-            # Erstellen einer neuen leeren DataFrame mit den notwendigen Spalten
             df = pd.DataFrame(columns=["ID", "Name", "Alter", "Trainingsart", "Datum", "Gewicht", "Größe", "Datei"])
             df.to_csv(self.result_file_path, index=False)
-            print("Eine neue Trainingslog-Datei wurde erstellt.")
-        else:
-            print("Eine existierende Trainingslog-Datei wird verwendet.")
+            st.info("Neue Trainingslog-Datei wurde erstellt.")
 
     def reset_session_state(self):
         st.session_state['data_saved'] = False
@@ -49,26 +47,14 @@ class CSVUploader:
         st.session_state['new_data'] = None
 
     def upload_file(self):
+        """Lädt eine JSON-Datei hoch und verarbeitet sie."""
         uploaded_file = st.file_uploader("Wähle eine JSON Datei", type="json")
-        if uploaded_file is not None:
-            # Prüfe auf Duplikate, bevor du versuchst, die Datei zu laden
-            if self.is_duplicate_file(uploaded_file.name):
-                st.error("Diese Datei wurde bereits verwendet.")
-                return None, None
-            
-            self.reset_session_state()
-
-            # Stellen Sie sicher, dass die JSON-Datei korrekt gelesen und geparst wird
+        if uploaded_file:
             try:
-                self.json_data = json.load(uploaded_file)
-                st.session_state['json_data'] = self.json_data
-                st.session_state['file_name'] = uploaded_file.name
-                st.session_state['file_uploaded'] = True
-                st.info("Hochgeladene JSON Datei wurde erfolgreich verarbeitet.")
-                return self.json_data, uploaded_file.name
+                json_data = json.load(uploaded_file)
+                return json_data, uploaded_file.name
             except json.JSONDecodeError as e:
                 st.error(f"Fehler beim Lesen der JSON-Datei: {e}")
-                return None, None
         return None, None
 
     def is_duplicate_file(self, file_name):
@@ -111,15 +97,12 @@ class CSVUploader:
         st.session_state['new_data'] = new_data
         return new_data
 
-def save_data(self, new_data):
-    if os.path.exists(self.result_file_path):
-        existing_df = pd.read_csv(self.result_file_path)
-        final_df = pd.concat([existing_df, pd.DataFrame([new_data])], ignore_index=True)
-    else:
-        final_df = pd.DataFrame([new_data])
-    
-    final_df.to_csv(self.result_file_path, index=False)
-    print(f"Daten wurden erfolgreich in {self.result_file_path} gespeichert")
+def save_data(self, data):
+        """Speichert die gesammelten Daten in der CSV-Datei."""
+        df = pd.read_csv(self.result_file_path)
+        df = df.append(data, ignore_index=True)
+        df.to_csv(self.result_file_path, index=False)
+        st.success("Daten erfolgreich gespeichert.")
 
     def is_duplicate_id(self, person_id, name):
         result_file_path = "Trainingslog.csv"
@@ -135,20 +118,17 @@ def save_data(self, new_data):
         return False
 
     def display_form(self):
-        st.subheader("Zusätzliche Daten eingeben")
-        person_id = st.text_input("Person ID (z.B. Geburtsdatum)", key="person_id")
-        person_name = st.text_input("Name der Person")
-        person_age = st.number_input("Alter der Person", min_value=0, max_value=120,value=None)
+        """Zeigt ein Formular zur Dateneingabe an und sammelt Benutzereingaben."""
+        person_id = st.text_input("Person ID", key="person_id")
+        name = st.text_input("Name der Person")
+        age = st.number_input("Alter der Person", min_value=0, max_value=120)
         training_type = st.selectbox("Trainingsart", ["Krafttraining", "Ausdauertraining"])
-        person_weight = st.number_input("Gewicht der Person (kg) - optional", min_value=0, max_value=300, value=None)
-        person_height = st.number_input("Größe der Person (cm) - optional", min_value=0, max_value=250, value=None)
+        weight = st.number_input("Gewicht der Person (kg)", min_value=0, max_value=300)
+        height = st.number_input("Größe der Person (cm)", min_value=0, max_value=250)
 
         if st.button("Daten speichern"):
-            if not self.is_duplicate_id(person_id, person_name):
-                self.add_person_data(person_id, person_name, person_age, training_type, person_weight, person_height)
-                st.success('Daten wurden gespeichert und Analyse kann durchgeführt werden.')
-            else:
-                st.error("Diese ID wurde bereits mit einem anderen Namen verwendet.")
+            return {"ID": person_id, "Name": name, "Alter": age, "Trainingsart": training_type, "Gewicht": weight, "Größe": height}
+        return None
 
     def analyze_json(self, json_data, additional_data):
         heart_rate_data = []
