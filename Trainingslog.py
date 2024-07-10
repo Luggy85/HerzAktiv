@@ -20,19 +20,24 @@ class CSVUploader:
     def upload_file(self):
         uploaded_file = st.file_uploader("Wähle eine JSON Datei", type="json")
         if uploaded_file is not None:
+            # Prüfe auf Duplikate, bevor du versuchst, die Datei zu laden
             if self.is_duplicate_file(uploaded_file.name):
                 st.error("Diese Datei wurde bereits verwendet.")
                 return None, None
             
             self.reset_session_state()
 
-            self.json_data = json.load(uploaded_file)
-            st.write("Hochgeladene JSON Datei:")
-
-            st.session_state['json_data'] = self.json_data
-            st.session_state['file_name'] = uploaded_file.name
-            st.session_state['file_uploaded'] = True
-            return self.json_data, uploaded_file.name
+            # Stellen Sie sicher, dass die JSON-Datei korrekt gelesen und geparst wird
+            try:
+                self.json_data = json.load(uploaded_file)
+                st.session_state['json_data'] = self.json_data
+                st.session_state['file_name'] = uploaded_file.name
+                st.session_state['file_uploaded'] = True
+                st.info("Hochgeladene JSON Datei wurde erfolgreich verarbeitet.")
+                return self.json_data, uploaded_file.name
+            except json.JSONDecodeError as e:
+                st.error(f"Fehler beim Lesen der JSON-Datei: {e}")
+                return None, None
         return None, None
 
     def is_duplicate_file(self, file_name):
@@ -40,12 +45,12 @@ class CSVUploader:
         if os.path.exists(result_file_path):
             try:
                 existing_df = pd.read_csv(result_file_path, on_bad_lines='skip')
-            except pd.errors.ParserError as e:
+                if file_name in existing_df['Datei'].values:
+                    return True
+            except pd.errors.EmptyDataError:
+                st.warning("CSV-Datei ist leer. Es wird kein Duplikat erkannt.")
+            except Exception as e:
                 st.error(f"Fehler beim Lesen der CSV-Datei: {e}")
-                return False
-
-            if file_name in existing_df['Datei'].values:
-                return True
         return False
 
     def is_duplicate_id(self, person_id, name):
