@@ -18,11 +18,17 @@ class CSVUploader:
         st.session_state['new_data'] = None
 
 class CSVUploader:
+
     def upload_file(self):
         uploaded_file = st.file_uploader("Wähle eine JSON-Datei", type=['json'])
         if uploaded_file is not None:
+            # Erstellen des Verzeichnisses, wenn es nicht existiert
+            temp_directory = 'temp'
+            if not os.path.exists(temp_directory):
+                os.makedirs(temp_directory)
+            
             # Speichern der Datei temporär
-            file_path = os.path.join('temp', uploaded_file.name)
+            file_path = os.path.join(temp_directory, uploaded_file.name)
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
