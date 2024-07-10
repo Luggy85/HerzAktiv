@@ -208,12 +208,23 @@ def read_csv_file(file_path):
     
 
 def trainingslog():
-    uploader = CSVUploader()
-    json_data, file_name = uploader.upload_file()
-    if json_data:
-        data = uploader.display_form()
-        if data:
-            uploader.save_data(data)
+    if st.session_state.get('diagram') == 4:
+        uploader = CSVUploader()
+        upload_result = uploader.upload_file()
+        if upload_result:
+            uploaded_file, file_path = upload_result
+            if uploaded_file:
+                st.session_state['file_uploaded'] = True
+                df = uploader.read_csv_file(file_path)
+                if df is not empty:
+                    st.session_state['data_saved'] = False
+                    uploader.display_form()  # Dies sollte nun das Formular anzeigen
+                else:
+                    st.error("Die hochgeladene Datei enthält keine Daten.")
+            else:
+                st.error("Keine Datei hochgeladen.")
+        else:
+            st.error("Fehler beim Hochladen der Datei.")
 
 
 def analyse_training():
