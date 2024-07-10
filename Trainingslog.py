@@ -20,29 +20,21 @@ class CSVUploader:
 class CSVUploader:
 
     def upload_file(self):
-        uploaded_file = st.file_uploader("Wähle eine JSON-Datei", type=['json'])
+        uploaded_file = st.file_uploader("Wähle eine JSON Datei", type='json')
         if uploaded_file is not None:
-            # Erstellen des Verzeichnisses, wenn es nicht existiert
-            temp_directory = 'temp'
-            if not os.path.exists(temp_directory):
-                os.makedirs(temp_directory)
-            
-            # Speichern der Datei temporär
-            file_path = os.path.join(temp_directory, uploaded_file.name)
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-
-            # Überprüfen, ob die Datei leer ist
-            if os.stat(file_path).st_size == 0:
-                st.error("Die hochgeladene Datei ist leer.")
-                return None, None
-
-            # Hier können weitere Prüfungen eingefügt werden, z.B. auf Duplikate
-            if self.is_duplicate_file(uploaded_file.name):
-                st.error("Diese Datei wurde bereits hochgeladen.")
-                return None, None
-
-            return uploaded_file, file_path
+            content = json.load(uploaded_file)  # JSON-Inhalt direkt laden
+            file_name = uploaded_file.name
+            if not self.is_duplicate_file(file_name):
+                # Angenommen, Sie speichern Daten über hochgeladene Dateien in einer CSV
+                df = pd.read_csv(self.result_file_path, on_bad_lines='skip') if os.path.exists(self.result_file_path) else pd.DataFrame()
+                new_data = {'file_name': file_name, 'used': True}
+                df = df.append(new_data, ignore_index=True)
+                df.to_csv(self.result_file_path, index=False)
+                st.session_state['json_data'] = content
+                st.session_state['file_uploaded'] = True
+                return content, file_name
+            else:
+                st.error("Diese Datei wurde bereits verwendet.")
         return None, None
 
     def is_duplicate_file(self, file_name):
