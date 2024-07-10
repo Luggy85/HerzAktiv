@@ -205,30 +205,28 @@ def read_csv_file(file_path):
         st.error(f"Fehler beim Lesen der Datei: {e}")
         return None
     
-def process_json_content(json_data):
-    if 'training_data' in json_data:
-        # Verarbeitung der Trainingsdaten
-        training_df = pd.DataFrame(json_data['training_data'])
-        # Beispielanalyse: Berechnung von Durchschnittswerten
-        average_metrics = training_df.mean()
-        st.write("Durchschnittliche Trainingsdaten:", average_metrics)
 
-        # Speichern der Daten in eine Datenbank oder Datei
-        training_df.to_csv('path_to_save_training_data.csv', index=False)
-
-        # Weitere Datenvisualisierung
-        st.bar_chart(training_df['some_metric'])
-
-        # Sie könnten hier auch weitere Analysen hinzufügen oder die Daten auf andere Weise nutzen
-    else:
-        st.error("Die hochgeladene JSON-Datei enthält keine erwarteten 'training_data'")
 
 def trainingslog():
     if st.session_state.get('diagram') == 4:
-        content, file_name = CSVUploader().upload_file()
-        if content is not None and file_name is not None:
-            process_json_content(content)  # Verarbeitet den Inhalt nach dem Hochladen
-            st.session_state['data_saved'] = True
+        uploader = CSVUploader()
+        upload_result = uploader.upload_file()
+        if upload_result is not None:
+            uploaded_file, file_path = upload_result
+            if uploaded_file is not None:
+                df = read_csv_file(file_path)
+                if df is not None:
+                    if st.session_state['file_uploaded'] and not st.session_state['data_saved']:
+                        # Hier können weitere Funktionen oder Formulare angezeigt werden
+                        st.success("Daten erfolgreich geladen und bereit zur Anzeige oder weiteren Verarbeitung.")
+                    else:
+                        st.warning("Datei hochgeladen, aber noch nicht verarbeitet.")
+                else:
+                    st.warning("Keine verwertbaren Daten in der Datei gefunden.")
+            else:
+                st.warning("Es wurde keine Datei hochgeladen.")
+        else:
+            st.warning("Fehler beim Hochladen der Datei.")
             
 def analyse_training():
     if st.session_state.get('diagram') == 4:
