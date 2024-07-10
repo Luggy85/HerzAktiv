@@ -12,28 +12,35 @@ class DataUploader:
         self.create_table()
 
     def create_connection(self):
-        """Stellt eine Verbindung zur SQLite-Datenbank her."""
-        conn = sqlite3.connect(self.db_file_path)
-        return conn
+        """Erstellt eine Verbindung zur SQLite-Datenbank."""
+        try:
+            conn = sqlite3.connect(self.db_file_path)
+            return conn
+        except Exception as e:
+            st.error(f"Verbindung zur Datenbank konnte nicht hergestellt werden: {e}")
 
     def create_table(self):
         """Erstellt die Tabelle, wenn sie noch nicht existiert."""
         conn = self.create_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS training_data (
-                ID TEXT PRIMARY KEY,
-                Name TEXT,
-                Alter INTEGER,
-                Trainingsart TEXT,
-                Datum TEXT,
-                Gewicht REAL,
-                Groesse REAL,
-                Datei TEXT
-            )
-        ''')
-        conn.commit()
-        conn.close()
+        try:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS training_data (
+                    ID TEXT PRIMARY KEY,
+                    Name TEXT,
+                    Alter INTEGER,
+                    Trainingsart TEXT,
+                    Datum TEXT,
+                    Gewicht REAL,
+                    Groesse REAL,
+                    Datei TEXT
+                )
+            ''')
+            conn.commit()
+        except sqlite3.OperationalError as e:
+            st.error(f"Ein Fehler ist aufgetreten: {e}")
+        finally:
+            conn.close()
 
     def insert_data(self, data):
         """Fügt neue Trainingsdaten in die Datenbank ein, falls keine Duplikate vorhanden sind."""
