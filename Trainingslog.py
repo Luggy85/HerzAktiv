@@ -8,25 +8,20 @@ import os
 class CSVUploader:
     
     def read_csv_file(self, file_path):
-        """Liest eine CSV-Datei sicher ein und erstellt sie bei Bedarf."""
-        if not os.path.exists(file_path):
-            # Erstellt eine leere CSV-Datei mit Spaltenköpfen, wenn sie nicht existiert
-            df = pd.DataFrame(columns=['ID', 'Name', 'Alter', 'Trainingsart', 'Datum', 'Gewicht', 'Größe', 'Datei'])
-            df.to_csv(file_path, index=False)
-            st.info("Eine neue Trainingslog-Datei wurde erstellt.")
+        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+            st.error("Die hochgeladene Datei ist leer oder existiert nicht.")
+            return None
+        try:
+            df = pd.read_csv(file_path)
+            if df.empty:
+                st.warning("Die CSV-Datei ist leer.")
             return df
-        else:
-            try:
-                df = pd.read_csv(file_path)
-                if df.empty:
-                    st.warning("CSV-Datei ist leer.")
-                return df
-            except pd.errors.EmptyDataError:
-                st.error("Die CSV-Datei ist leer und hat keine Spalten zu lesen.")
-                return None
-            except Exception as e:
-                st.error(f"Ein Fehler ist beim Lesen der CSV-Datei aufgetreten: {e}")
-                return None
+        except pd.errors.EmptyDataError:
+            st.error("Die CSV-Datei ist leer und hat keine Spalten zu lesen.")
+            return None
+        except Exception as e:
+            st.error(f"Fehler beim Lesen der Datei: {e}")
+            return None
             
     def __init__(self):
         self.result_file_path = "Trainingslog.csv"
@@ -51,15 +46,8 @@ class CSVUploader:
     def upload_file(self):
         uploaded_file = st.file_uploader("Wähle eine JSON Datei", type="json")
         if uploaded_file is not None:
-            # Prüfe auf Duplikate, bevor du versuchst, die Datei zu laden
-            if self.is_duplicate_file(uploaded_file.name):
-                st.error("Diese Datei wurde bereits verwendet.")
-                return None, None
-            
-            self.reset_session_state()
-
-            # Stellen Sie sicher, dass die JSON-Datei korrekt gelesen und geparst wird
             try:
+                # Die JSON-Daten direkt aus der hochgeladenen Datei lesen
                 self.json_data = json.load(uploaded_file)
                 st.session_state['json_data'] = self.json_data
                 st.session_state['file_name'] = uploaded_file.name
