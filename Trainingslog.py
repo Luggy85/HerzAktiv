@@ -29,8 +29,17 @@ class CSVUploader:
                 return None
             
     def __init__(self):
-        self.data_frame = None
-        self.json_data = None
+        self.result_file_path = "Trainingslog.csv"
+        self.check_or_create_csv()
+
+    def check_or_create_csv(self):
+        if not os.path.exists(self.result_file_path):
+            # Erstellen einer neuen leeren DataFrame mit den notwendigen Spalten
+            df = pd.DataFrame(columns=["ID", "Name", "Alter", "Trainingsart", "Datum", "Gewicht", "Größe", "Datei"])
+            df.to_csv(self.result_file_path, index=False)
+            print("Eine neue Trainingslog-Datei wurde erstellt.")
+        else:
+            print("Eine existierende Trainingslog-Datei wird verwendet.")
 
     def reset_session_state(self):
         st.session_state['data_saved'] = False
@@ -102,18 +111,15 @@ class CSVUploader:
         st.session_state['new_data'] = new_data
         return new_data
 
-    def save_data(self):
-        new_data = st.session_state['new_data']
-        result_file_path = "Trainingslog.csv"
-        if os.path.exists(result_file_path):
-            existing_df = pd.read_csv(result_file_path, on_bad_lines='skip')
-            final_df = pd.concat([existing_df, pd.DataFrame([new_data])], ignore_index=True)
-        else:
-            final_df = pd.DataFrame([new_data])
-        
-        final_df.to_csv(result_file_path, index=False)
-        st.success(f"Daten wurden erfolgreich in {result_file_path} gespeichert")
-        st.session_state['data_saved'] = True
+def save_data(self, new_data):
+    if os.path.exists(self.result_file_path):
+        existing_df = pd.read_csv(self.result_file_path)
+        final_df = pd.concat([existing_df, pd.DataFrame([new_data])], ignore_index=True)
+    else:
+        final_df = pd.DataFrame([new_data])
+    
+    final_df.to_csv(self.result_file_path, index=False)
+    print(f"Daten wurden erfolgreich in {self.result_file_path} gespeichert")
 
     def is_duplicate_id(self, person_id, name):
         result_file_path = "Trainingslog.csv"
