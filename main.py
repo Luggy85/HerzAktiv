@@ -213,19 +213,13 @@ def trainingslog():
         upload_result = uploader.upload_file()
         if upload_result is not None:
             uploaded_file, file_path = upload_result
-            if uploaded_file is not None and os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                df = read_csv_file(file_path)
-                if df is not None:
-                    if st.session_state['file_uploaded'] and not st.session_state['data_saved']:
-                        # Hier können weitere Funktionen oder Formulare angezeigt werden
-                        st.success("Daten erfolgreich geladen und bereit zur Anzeige oder weiteren Verarbeitung.")
-                        st.session_state['data_saved'] = True
-                    else:
-                        st.warning("Datei hochgeladen, aber noch nicht verarbeitet.")
-                else:
-                    st.warning("Keine verwertbaren Daten in der Datei gefunden.")
+            if uploaded_file is not None:
+                # Annahme, dass Datei erfolgreich hochgeladen wurde
+                st.session_state['file_uploaded'] = True
+                st.session_state['data_saved'] = False  # Stellen Sie sicher, dass Daten noch nicht als gespeichert markiert sind
+                uploader.display_form()  # Zeigt das Formular an, wenn die Datei hochgeladen wurde
             else:
-                st.warning("Hochgeladene Datei ist leer oder konnte nicht korrekt gelesen werden.")
+                st.warning("Es wurde keine Datei hochgeladen.")
         else:
             st.warning("Fehler beim Hochladen der Datei.")
             
