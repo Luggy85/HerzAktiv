@@ -20,20 +20,19 @@ class DataUploader:
             st.error(f"Verbindung zur Datenbank konnte nicht hergestellt werden: {e}")
 
     def create_table(self):
-        """Erstellt die Tabelle, wenn sie noch nicht existiert."""
         conn = self.create_connection()
         cursor = conn.cursor()
         try:
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS training_data (
-                    ID TEXT PRIMARY KEY,
-                    Name TEXT,
-                    Alter INTEGER,
-                    Trainingsart TEXT,
-                    Datum TEXT,
-                    Gewicht REAL,
-                    Groesse REAL,
-                    Datei TEXT
+                    "ID" TEXT PRIMARY KEY,
+                    "Name" TEXT,
+                    "Alter" INTEGER,  -- Verwendung von Anführungszeichen
+                    "Trainingsart" TEXT,
+                    "Datum" TEXT,
+                    "Gewicht" REAL,
+                    "Groesse" REAL,
+                    "Datei" TEXT
                 )
             ''')
             conn.commit()
