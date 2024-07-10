@@ -192,38 +192,41 @@ if 'file_uploaded' not in st.session_state:
 
 
 def read_csv_file(file_path):
-    # Überprüfen, ob die Datei existiert und nicht leer ist
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
-        print("Die Datei existiert nicht oder ist leer.")
-        return None  # Oder handle den Fehler entsprechend
-
-    # Datei einlesen, wenn sie existiert und nicht leer ist
+        st.error("Die hochgeladene Datei ist leer oder existiert nicht.")
+        return None
     try:
-        df = pd.read_csv(file_path, on_bad_lines='skip')
+        df = pd.read_csv(file_path)
+        if df.empty:
+            st.error("Die Datei enthält keine Daten.")
+            return None
         return df
-    except pd.errors.EmptyDataError:
-        print("Die Datei ist leer.")
-        return None  # Oder handle den Fehler entsprechend
     except Exception as e:
-        print(f"Ein Fehler ist aufgetreten: {e}")
-        return None  # Oder handle den Fehler entsprechend
+        st.error(f"Fehler beim Lesen der Datei: {e}")
+        return None
 
 def trainingslog():
     if st.session_state.get('diagram') == 4:
         uploader = CSVUploader()
-        uploaded_file = uploader.upload_file()  # Stelle sicher, dass diese Methode den Pfad zurückgibt
-        if uploaded_file is not None:
-            file_path = uploaded_file.name
-            df = read_csv_file(file_path)
-            if df is not None and not df.empty:
-                if st.session_state['file_uploaded'] and not st.session_state['data_saved']:
-                    uploader.display_form()
-                # Weitere Logik zur Verarbeitung von df hier hinzufügen
+        upload_result = uploader.upload_file()
+        if upload_result is not None:
+            uploaded_file, file_path = upload_result
+            if uploaded_file is not None:
+                df = read_csv_file(file_path)
+                if df is not None:
+                    if st.session_state['file_uploaded'] and not st.session_state['data_saved']:
+                        # Hier können weitere Funktionen oder Formulare angezeigt werden
+                        st.success("Daten erfolgreich geladen und bereit zur Anzeige oder weiteren Verarbeitung.")
+                    else:
+                        st.warning("Datei hochgeladen, aber noch nicht verarbeitet.")
+                else:
+                    st.warning("Keine verwertbaren Daten in der Datei gefunden.")
             else:
-                st.warning("Die verarbeitete Datei enthält keine verwertbaren Daten.")
+                st.warning("Es wurde keine Datei hochgeladen.")
         else:
-            st.warning("Es wurde keine Datei hochgeladen oder die hochgeladene Datei konnte nicht verarbeitet werden.")
+            st.warning("Fehler beim Hochladen der Datei.")
 
+            
 def analyse_training():
     if st.session_state.get('diagram') == 4:
         uploader = CSVUploader()

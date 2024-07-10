@@ -18,21 +18,24 @@ class CSVUploader:
         st.session_state['new_data'] = None
 
     def upload_file(self):
-        uploaded_file = st.file_uploader("Wähle eine JSON Datei", type="json")
+        uploaded_file = st.file_uploader("Wähle eine CSV-Datei", type=['csv'])
         if uploaded_file is not None:
-            if self.is_duplicate_file(uploaded_file.name):
-                st.error("Diese Datei wurde bereits verwendet.")
+            # Speichern der Datei temporär
+            file_path = os.path.join('temp', uploaded_file.name)
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            # Überprüfen, ob die Datei leer ist
+            if os.stat(file_path).st_size == 0:
+                st.error("Die hochgeladene Datei ist leer.")
                 return None, None
-            
-            self.reset_session_state()
 
-            self.json_data = json.load(uploaded_file)
-            st.write("Hochgeladene JSON Datei:")
+            # Hier können weitere Prüfungen eingefügt werden, z.B. auf Duplikate
+            if self.is_duplicate_file(uploaded_file.name):
+                st.error("Diese Datei wurde bereits hochgeladen.")
+                return None, None
 
-            st.session_state['json_data'] = self.json_data
-            st.session_state['file_name'] = uploaded_file.name
-            st.session_state['file_uploaded'] = True
-            return self.json_data, uploaded_file.name
+            return uploaded_file, file_path
         return None, None
 
     def is_duplicate_file(self, file_name):
