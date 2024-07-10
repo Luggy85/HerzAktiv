@@ -17,8 +17,9 @@ class CSVUploader:
         st.session_state['file_uploaded'] = False
         st.session_state['new_data'] = None
 
+class CSVUploader:
     def upload_file(self):
-        uploaded_file = st.file_uploader("Wähle eine CSV-Datei", type=['csv'])
+        uploaded_file = st.file_uploader("Wähle eine JSON-Datei", type=['json'])
         if uploaded_file is not None:
             # Speichern der Datei temporär
             file_path = os.path.join('temp', uploaded_file.name)
