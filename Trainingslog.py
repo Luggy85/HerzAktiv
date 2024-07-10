@@ -93,21 +93,21 @@ class CSVUploader:
         st.success(f"Daten wurden erfolgreich in {result_file_path} gespeichert")
         st.session_state['data_saved'] = True
 
-def display_form(self):
-    st.subheader("Zusätzliche Daten eingeben")
-    person_id = st.text_input("Person ID (z.B. Geburtsdatum)", key="person_id")
-    person_name = st.text_input("Name der Person")
-    person_age = st.number_input("Alter der Person", min_value=0, max_value=120, value=None)
-    training_type = st.selectbox("Trainingsart", ["Krafttraining", "Ausdauertraining"])
-    person_weight = st.number_input("Gewicht der Person (kg) - optional", min_value=0, max_value=300, value=None)
-    person_height = st.number_input("Größe der Person (cm) - optional", min_value=0, max_value=250, value=None)
+    def display_form(self):
+        st.subheader("Zusätzliche Daten eingeben")
+        person_id = st.text_input("Person ID (z.B. Geburtsdatum)", key="person_id")
+        person_name = st.text_input("Name der Person")
+        person_age = st.number_input("Alter der Person", min_value=0, max_value=120, value=None)
+        training_type = st.selectbox("Trainingsart", ["Krafttraining", "Ausdauertraining"])
+        person_weight = st.number_input("Gewicht der Person (kg) - optional", min_value=0, max_value=300, value=None)
+        person_height = st.number_input("Größe der Person (cm) - optional", min_value=0, max_value=250, value=None)
 
-    if st.button("Daten speichern"):
-        if not self.is_duplicate_id(person_id, person_name):
-            self.add_person_data(person_id, person_name, person_age, training_type, person_weight, person_height)
-            st.success('Daten wurden gespeichert und Analyse kann durchgeführt werden.')
-        else:
-            st.error("Diese ID wurde bereits mit einem anderen Namen verwendet.")
+        if st.button("Daten speichern"):
+            if not self.is_duplicate_id(person_id, person_name):
+                self.add_person_data(person_id, person_name, person_age, training_type, person_weight, person_height)
+                st.success('Daten wurden gespeichert und Analyse kann durchgeführt werden.')
+            else:
+                st.error("Diese ID wurde bereits mit einem anderen Namen verwendet.")
 
     def analyze_json(self, json_data, additional_data):
         heart_rate_data = []
