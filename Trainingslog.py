@@ -183,8 +183,8 @@ class CSVUploader:
         max_hr = round(hr_df['Max'].max(), 2)
         min_hr = round(hr_df['Min'].min(), 2)
         avg_duration = round(duration_df['Dauer (Minuten)'].mean(), 2)
-        total_calories = sum(calories_burned)
-        total_steps = sum(steps_data)
+        total_calories = round(sum(calories_burned),2)
+        total_steps = round(sum(steps_data),2)
         avg_intensity = round(sum(intensity_data) / len(intensity_data), 2) if intensity_data else None
 
         col1, col2 = st.columns(2)
