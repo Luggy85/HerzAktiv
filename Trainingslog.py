@@ -93,11 +93,24 @@ class CSVUploader:
         st.success(f"Daten wurden erfolgreich in {result_file_path} gespeichert")
         st.session_state['data_saved'] = True
 
+    def is_duplicate_id(self, person_id, name):
+        result_file_path = "Trainingslog.csv"
+        if os.path.exists(result_file_path) and os.path.getsize(result_file_path) > 0:
+            try:
+                existing_df = pd.read_csv(result_file_path, on_bad_lines='skip')
+                if person_id in existing_df['ID'].values and name != existing_df.loc[existing_df['ID'] == person_id, 'Name'].values[0]:
+                    return True
+            except pd.errors.EmptyDataError:
+                st.warning("CSV-Datei ist leer. Es wird kein Duplikat erkannt.")
+            except Exception as e:
+                st.error(f"Fehler beim Lesen der CSV-Datei: {e}")
+        return False
+
     def display_form(self):
         st.subheader("Zusätzliche Daten eingeben")
         person_id = st.text_input("Person ID (z.B. Geburtsdatum)", key="person_id")
         person_name = st.text_input("Name der Person")
-        person_age = st.number_input("Alter der Person", min_value=0, max_value=120, value=None)
+        person_age = st.number_input("Alter der Person", min_value=0, max_value=120,value=None)
         training_type = st.selectbox("Trainingsart", ["Krafttraining", "Ausdauertraining"])
         person_weight = st.number_input("Gewicht der Person (kg) - optional", min_value=0, max_value=300, value=None)
         person_height = st.number_input("Größe der Person (cm) - optional", min_value=0, max_value=250, value=None)
