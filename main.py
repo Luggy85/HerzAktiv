@@ -206,27 +206,24 @@ def read_csv_file(file_path):
         return None
     
 
-
 def trainingslog():
     if st.session_state.get('diagram') == 4:
         uploader = CSVUploader()
-        try:
-            upload_result = uploader.upload_file()
-            if upload_result is not None:
-                uploaded_file, file_path = upload_result
-                if uploaded_file is not None:
-                    df = uploader.read_csv_file(file_path)
-                    if df is not None and not df.empty:
-                        st.success("Daten erfolgreich geladen und bereit zur weiteren Verarbeitung.")
-                        uploader.display_form()
-                    else:
-                        st.warning("Keine verwertbaren Daten in der Datei gefunden.")
+        upload_result = uploader.upload_file()
+        if upload_result:
+            uploaded_file, file_path = upload_result
+            if uploaded_file:
+                st.session_state['file_uploaded'] = True
+                df = uploader.read_csv_file(file_path)
+                if df is not empty:
+                    st.session_state['data_saved'] = False
+                    uploader.display_form()  # Dies sollte nun das Formular anzeigen
                 else:
-                    st.warning("Es wurde keine Datei hochgeladen.")
+                    st.error("Die hochgeladene Datei enthält keine Daten.")
             else:
-                st.error("Fehler beim Hochladen der Datei.")
-        except Exception as e:
-            st.error(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+                st.error("Keine Datei hochgeladen.")
+        else:
+            st.error("Fehler beim Hochladen der Datei.")
 
 
 def analyse_training():
