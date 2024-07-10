@@ -40,9 +40,6 @@ class EKGAnalyzer:
                 except ValueError as e:
                     print(f"Zeile konnte nicht konvertiert werden: {line}")
                     raise e
-        # Debug-Ausgaben um sicherzustellen, dass die Daten korrekt geladen wurden
-        print(f"Geladene Daten: {data[:10]}")
-        print(f"Geladene Zeitstempel: {time[:10]}")
         return time, data
 
     def detect_peaks(self, data, height=None, distance=None, threshold=None):
@@ -58,8 +55,6 @@ class EKGAnalyzer:
         # Die Zeitwerte werden angenommen, dass sie bereits in Sekunden sind
         peak_times = np.array(time)[peaks]
         rr_intervals = np.diff(peak_times)
-        print(f"Peak Times (in Sekunden): {peak_times}")
-        print(f"RR-Intervalle (in Sekunden): {rr_intervals}")
         
         if len(rr_intervals) == 0:
             return None, None
